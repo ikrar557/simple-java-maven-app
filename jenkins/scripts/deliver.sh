@@ -23,4 +23,10 @@ set +x
 echo 'The following command runs and outputs the execution of your Java'
 echo 'application (which Jenkins built using Maven) to the Jenkins UI.'
 set -x
-java -jar target/${NAME}-${VERSION}.jar
+java -jar target/${NAME}-${VERSION}.jar &
+echo $! > .pidfile
+set +x
+
+echo '✨ Application started successfully!'
+echo '🌍 You can now access the application at: http://localhost:8080'
+echo '⏳ The application will remain accessible until the pipeline completes.'

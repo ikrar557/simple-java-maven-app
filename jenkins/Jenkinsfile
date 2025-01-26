@@ -1,5 +1,5 @@
 node {
-    docker.image('maven:3.9.9').inside {
+    docker.image('maven:3.9.9').inside ('-p 8080:8080'){
         stage('Build') {
             sh 'mvn -B -DskipTests clean package'
         }
