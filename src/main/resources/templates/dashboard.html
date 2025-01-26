@@ -92,10 +92,10 @@
 
         <div class="card">
             <h2>Quick Links</h2>
-            <a href="http://localhost:49000" class="link">Jenkins Dashboard</a>
-            <a href="http://localhost:9000" class="link">Nginx Status</a>
-            <a href="http://localhost:3031" class="link">Grafana Metrics</a>
-            <a href="http://localhost:9091" class="link">Prometheus Metrics</a>
+            <a th:href="${jenkinsUrl}" class="link">Jenkins Dashboard</a>
+            <a th:href="${nginxUrl}" class="link">Nginx Status</a>
+            <a th:href="${grafanaUrl}" class="link">Grafana Metrics</a>
+            <a th:href="${prometheusUrl}" class="link">Prometheus Metrics</a>
         </div>
     </div>
 </body>
