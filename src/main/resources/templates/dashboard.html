@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Java CI/CD Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f6fa;
+        }
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .timestamp {
+            color: #ecf0f1;
+            font-size: 1.1em;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        .button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .button:hover {
+            background-color: #2980b9;
+        }
+        .link {
+            color: #3498db;
+            text-decoration: none;
+            display: block;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .link:hover {
+            background-color: #f0f2f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Java CI/CD Dashboard</h1>
+        <p class="timestamp" th:text="'Current Time: ' + ${currentTime}"></p>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Deployment Statistics</h2>
+            <p>Total Deployments: <span th:text="${deployCount}"></span></p>
+            <p>Last Deployment: <span th:text="${lastDeployment}"></span></p>
+            <a href="/deploy" class="button">Simulate Deploy</a>
+        </div>
+
+        <div class="card">
+            <h2>Project Information</h2>
+            <p>Environment: <span th:text="${environment}"></span></p>
+            <p>Status: <span th:text="${status}"></span></p>
+            <p>Build: Java + Spring Boot + Jenkins Pipeline</p>
+        </div>
+
+        <div class="card">
+            <h2>Quick Links</h2>
+            <a href="http://localhost:49000" class="link">Jenkins Dashboard</a>
+            <a href="http://localhost:9000" class="link">Nginx Status</a>
+            <a href="http://localhost:3031" class="link">Grafana Metrics</a>
+            <a href="http://localhost:9091" class="link">Prometheus Metrics</a>
+        </div>
+    </div>
+</body>
+</html>
