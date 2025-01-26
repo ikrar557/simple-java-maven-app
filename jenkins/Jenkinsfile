@@ -3,7 +3,7 @@ node {
         checkout scm
     }
     
-    docker.image('maven:3.9.9').inside ('-p 8080:8080'){
+    docker.image('maven:3.9.9').inside('-p 8080:8080 -e MAVEN_OPTS="-Dspring.profiles.active=default"') {
         stage('Build') {
             sh 'mvn -B -DskipTests clean package'
         }
@@ -16,8 +16,10 @@ node {
             }
         }
         
-        stage('Deliver') {
+        stage('Deploy') {
             sh './jenkins/scripts/deliver.sh'
+            echo 'Application is now running. Waiting for 1 minute before completing...'
+            sleep(time: 60, unit: 'SECONDS')
         }
     }
 }
