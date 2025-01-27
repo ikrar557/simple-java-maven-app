@@ -21,29 +21,22 @@ node {
         }
         
         stage('Deploy') {
-            withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+            sshagent(['ec2-ssh-key']) {
                 def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
                 
-                sh """
-                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
-                    ${jarFile} ubuntu@3.25.53.27:/home/ubuntu/app.jar
-                """
+                sh "scp -o StrictHostKeyChecking=no ${jarFile} ubuntu@3.25.53.27:/home/ubuntu/app.jar"
                 
-                sh """
-                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@3.25.53.27 '
-                    pkill -f app.jar || true
-                    nohup java -jar /home/ubuntu/app.jar > app.log 2>&1 &
-                    '
-                """
+                sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@3.25.53.27 "
+                        pkill -f app.jar || true
+                        nohup java -jar /home/ubuntu/app.jar > app.log 2>&1 &
+                    "
+                '''
                 
                 echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
                 sleep(time: 60, unit: 'SECONDS')
                 
-                sh """
-                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@3.25.53.27 '
-                    pkill -f app.jar || true
-                    '
-                """
+                sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.25.53.27 "pkill -f app.jar || true"'
                 
                 echo 'Aplikasi berhasil dimatikan'
             }
