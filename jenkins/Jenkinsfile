@@ -15,16 +15,31 @@ node {
                 junit 'target/surefire-reports/*.xml'
             }
         }
-
+        
         stage('Manual Approval') {
-            input message: 'Lanjutkan ke tahap Deploy?',
-                ok: 'Proceed'
+            input message: 'Deploy to EC2?', ok: 'Deploy'
         }
         
-        stage('Deploy') {
-            sh './jenkins/scripts/deliver.sh'
-            echo 'Application is now running. Waiting for 1 minute before completing...'
-            sleep(time: 60, unit: 'SECONDS')
+        stage('Deploy to EC2') {
+            withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
+                
+                // Copy JAR file to EC2
+                sh """
+                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
+                    ${jarFile} ubuntu@3.25.53.27:/home/ubuntu/app.jar
+                """
+                
+                // Start application on EC2
+                sh """
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@3.25.53.27 '
+                    pkill -f app.jar || true
+                    nohup java -jar /home/ubuntu/app.jar > app.log 2>&1 &
+                    '
+                """
+                
+                echo 'Application deployed to EC2 successfully'
+            }
         }
     }
 }
