@@ -23,19 +23,18 @@ node {
         stage('Deploy to EC2') {
             withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                 def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
+                def remote = [:]
+                remote.name = 'ec2'
+                remote.host = '3.25.53.27'
+                remote.user = 'ubuntu'
+                remote.identityFile = SSH_KEY
+                remote.allowAnyHosts = true
                 
-                // Copy JAR file to EC2
-                sh """
-                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
-                    ${jarFile} ubuntu@3.25.53.27:/home/ubuntu/app.jar
-                """
+                sshPut remote: remote, from: jarFile, into: '/home/ubuntu/app.jar'
                 
-                // Start application on EC2
-                sh """
-                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@3.25.53.27 '
+                sshCommand remote: remote, command: """
                     pkill -f app.jar || true
                     nohup java -jar /home/ubuntu/app.jar > app.log 2>&1 &
-                    '
                 """
                 
                 echo 'Application deployed to EC2 successfully'
