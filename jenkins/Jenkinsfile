@@ -17,27 +17,35 @@ node {
         }
         
         stage('Manual Approval') {
-            input message: 'Deploy to EC2?', ok: 'Deploy'
+            input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed'
         }
         
-        stage('Deploy to EC2') {
+        stage('Deploy') {
             withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
                 def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
-                def remote = [:]
-                remote.name = 'ec2'
-                remote.host = '3.25.53.27'
-                remote.user = 'ubuntu'
-                remote.identityFile = SSH_KEY
-                remote.allowAnyHosts = true
                 
-                sshPut remote: remote, from: jarFile, into: '/home/ubuntu/app.jar'
-                
-                sshCommand remote: remote, command: """
-                    pkill -f app.jar || true
-                    nohup java -jar /home/ubuntu/app.jar > app.log 2>&1 &
+                sh """
+                    scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
+                    ${jarFile} ubuntu@3.25.53.27:/home/ubuntu/app.jar
                 """
                 
-                echo 'Application deployed to EC2 successfully'
+                sh """
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@3.25.53.27 '
+                    pkill -f app.jar || true
+                    nohup java -jar /home/ubuntu/app.jar > app.log 2>&1 &
+                    '
+                """
+                
+                echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
+                sleep(time: 60, unit: 'SECONDS')
+                
+                sh """
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no ubuntu@3.25.53.27 '
+                    pkill -f app.jar || true
+                    '
+                """
+                
+                echo 'Aplikasi berhasil dimatikan'
             }
         }
     }
