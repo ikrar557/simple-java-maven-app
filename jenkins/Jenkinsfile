@@ -1,8 +1,6 @@
 node {
-    environment {
-        EC2_HOST = 'ubuntu@13.211.58.33'
-        DEPLOY_PATH = '/home/ubuntu/simple-maven-java-app'
-    }
+    def EC2_HOST = 'ubuntu@13.211.58.33'
+    def DEPLOY_PATH = '/home/ubuntu/simple-maven-java-app'
 
     stage('Checkout') {
         checkout scm
@@ -30,22 +28,20 @@ node {
         sshagent(['ec2-ssh-key']) {
             def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
             
-            sh """
-                EC2_HOST=${EC2_HOST}
-                DEPLOY_PATH=${DEPLOY_PATH}
-                chmod +x ./jenkins/scripts/deploy.sh
-                ./jenkins/scripts/deploy.sh
-            """
-            
-            echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
-            sleep(time: 60, unit: 'SECONDS')
-            
-            sh """
-                EC2_HOST=${EC2_HOST}
-                DEPLOY_PATH=${DEPLOY_PATH}
-                chmod +x ./jenkins/scripts/kill.sh
-                ./jenkins/scripts/kill.sh
-            """
+            withEnv(["EC2_HOST=${EC2_HOST}", "DEPLOY_PATH=${DEPLOY_PATH}"]) {
+                sh '''
+                    chmod +x ./jenkins/scripts/deploy.sh
+                    ./jenkins/scripts/deploy.sh
+                '''
+                
+                echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
+                sleep(time: 60, unit: 'SECONDS')
+                
+                sh '''
+                    chmod +x ./jenkins/scripts/kill.sh
+                    ./jenkins/scripts/kill.sh
+                '''
+            }
             
             echo 'Aplikasi berhasil dimatikan'
         }
