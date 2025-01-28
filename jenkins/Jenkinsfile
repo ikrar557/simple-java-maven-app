@@ -22,23 +22,30 @@ node {
     }
     
     stage('Deploy') {
-        // Build Docker image
-        sh 'docker build -t java-app .'
-        
-        // Stop and remove existing container if exists
-        sh 'docker stop java-app || true'
-        sh 'docker rm java-app || true'
-        
-        // Run new container
-        sh 'docker run -d --name java-app -p 8080:8080 java-app'
-        
-        echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
-        sleep(time: 60, unit: 'SECONDS')
-        
-        // Stop and remove container
-        sh 'docker stop java-app'
-        sh 'docker rm java-app'
-        
-        echo 'Aplikasi berhasil dimatikan'
+        sshagent(['ec2-ssh-key']) {
+            def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
+            
+            sh """
+                scp -o StrictHostKeyChecking=no ${jarFile} ubuntu@13.211.87.243:/home/ubuntu/app.jar
+                scp -o StrictHostKeyChecking=no Dockerfile ubuntu@13.211.87.243:/home/ubuntu/Dockerfile
+            """
+            
+            sh '''
+                ssh -o StrictHostKeyChecking=no ubuntu@13.211.87.243 "
+                    cd /home/ubuntu
+                    docker stop java-app || true
+                    docker rm java-app || true
+                    docker build -t java-app .
+                    docker run -d --name java-app -p 8080:8080 java-app
+                "
+            '''
+            
+            echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
+            sleep(time: 60, unit: 'SECONDS')
+            
+            sh 'ssh -o StrictHostKeyChecking=no ubuntu@13.211.87.243 "docker stop java-app && docker rm java-app"'
+            
+            echo 'Aplikasi berhasil dimatikan'
+        }
     }
 }
