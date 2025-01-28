@@ -26,8 +26,8 @@ node {
             def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
             
             sh """
-                scp -o StrictHostKeyChecking=no ${jarFile} ubuntu@13.211.87.243:/home/ubuntu/app.jar
-                scp -o StrictHostKeyChecking=no Dockerfile ubuntu@13.211.87.243:/home/ubuntu/Dockerfile
+                scp -o StrictHostKeyChecking=no ${jarFile} ubuntu@13.211.87.243:/home/ubuntu/simple-maven-java-app/app.jar
+                scp -o StrictHostKeyChecking=no Dockerfile ubuntu@13.211.87.243:/home/ubuntu/simple-maven-java-app/Dockerfile
             """
             
             sh '''
