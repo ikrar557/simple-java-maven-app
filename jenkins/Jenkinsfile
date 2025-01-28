@@ -3,7 +3,7 @@ node {
         checkout scm
     }
     
-    docker.image('maven:3.9.9').inside('-p 8080:8080 -e MAVEN_OPTS="-Dspring.profiles.active=default"') {
+    docker.image('maven:3.9.9').inside {
         stage('Build') {
             sh 'mvn -B -DskipTests clean package'
         }
@@ -15,57 +15,30 @@ node {
                 junit 'target/surefire-reports/*.xml'
             }
         }
+    }
+    
+    stage('Manual Approval') {
+        input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed'
+    }
+    
+    stage('Deploy') {
+        // Build Docker image
+        sh 'docker build -t java-app .'
         
-        stage('Manual Approval') {
-            input message: 'Lanjutkan ke tahap Deploy?', ok: 'Proceed'
-        }
+        // Stop and remove existing container if exists
+        sh 'docker stop java-app || true'
+        sh 'docker rm java-app || true'
         
-        stage('Deploy') {
-            // Build Docker image
-            sh 'docker build -t java-app .'
-            
-            // Stop and remove existing container if exists
-            sh 'docker stop java-app || true'
-            sh 'docker rm java-app || true'
-            
-            // Run new container
-            sh 'docker run -d --name java-app -p 8080:8080 java-app'
-            
-            echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
-            sleep(time: 60, unit: 'SECONDS')
-            
-            // Stop and remove container
-            sh 'docker stop java-app'
-            sh 'docker rm java-app'
-            
-            echo 'Aplikasi berhasil dimatikan'
-            
-            /* Commented EC2 deployment for later use
-            sshagent(['ec2-ssh-key']) {
-                def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
-                
-                sh """
-                    scp -o StrictHostKeyChecking=no ${jarFile} ubuntu@3.25.53.27:/home/ubuntu/app.jar
-                    scp -o StrictHostKeyChecking=no Dockerfile ubuntu@3.25.53.27:/home/ubuntu/Dockerfile
-                """
-                
-                sh '''
-                    ssh -o StrictHostKeyChecking=no ubuntu@3.25.53.27 "
-                        docker stop java-app || true
-                        docker rm java-app || true
-                        docker build -t java-app .
-                        docker run -d --name java-app -p 8080:8080 java-app
-                    "
-                '''
-                
-                echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
-                sleep(time: 60, unit: 'SECONDS')
-                
-                sh 'ssh -o StrictHostKeyChecking=no ubuntu@3.25.53.27 "docker stop java-app && docker rm java-app"'
-                
-                echo 'Aplikasi berhasil dimatikan'
-            }
-            */
-        }
+        // Run new container
+        sh 'docker run -d --name java-app -p 8080:8080 java-app'
+        
+        echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
+        sleep(time: 60, unit: 'SECONDS')
+        
+        // Stop and remove container
+        sh 'docker stop java-app'
+        sh 'docker rm java-app'
+        
+        echo 'Aplikasi berhasil dimatikan'
     }
 }
