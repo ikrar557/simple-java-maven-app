@@ -22,28 +22,20 @@ node {
     }
     
     stage('Deploy') {
+        environment {
+            EC2_HOST = 'ubuntu@13.211.58.33'
+            DEPLOY_PATH = '/home/ubuntu/simple-maven-java-app'
+        }
+        
         sshagent(['ec2-ssh-key']) {
             def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
             
-            sh """
-                scp -o StrictHostKeyChecking=no ${jarFile} ubuntu@13.211.87.243:/home/ubuntu/simple-maven-java-app/app.jar
-                scp -o StrictHostKeyChecking=no Dockerfile ubuntu@13.211.87.243:/home/ubuntu/simple-maven-java-app/Dockerfile
-            """
-            
-            sh '''
-                ssh -o StrictHostKeyChecking=no ubuntu@13.211.87.243 "
-                    cd /home/ubuntu/simple-maven-java-app
-                    docker stop java-app || true
-                    docker rm java-app || true
-                    docker build -t java-app .
-                    docker run -d --name java-app -p 8080:8080 java-app
-                "
-            '''
+            sh './jenkins/scripts/deploy.sh'
             
             echo 'Aplikasi sedang berjalan. Tunggu 1 menit sebelum dimatikan...'
             sleep(time: 60, unit: 'SECONDS')
             
-            sh 'ssh -o StrictHostKeyChecking=no ubuntu@13.211.87.243 "docker stop java-app && docker rm java-app"'
+            sh './jenkins/scripts/kill.sh'
             
             echo 'Aplikasi berhasil dimatikan'
         }
