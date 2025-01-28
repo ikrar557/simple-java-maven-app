@@ -32,7 +32,7 @@ node {
             
             sh '''
                 ssh -o StrictHostKeyChecking=no ubuntu@13.211.87.243 "
-                    cd /home/ubuntu
+                    cd /home/ubuntu/simple-maven-java-app
                     docker stop java-app || true
                     docker rm java-app || true
                     docker build -t java-app .
