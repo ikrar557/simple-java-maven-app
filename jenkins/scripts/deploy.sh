@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Extract hostname without username for URL display
+HOST_URL=$(echo ${EC2_HOST} | cut -d '@' -f2)
+
 # Copy files to EC2
 scp -o StrictHostKeyChecking=no target/*.jar ${EC2_HOST}:${DEPLOY_PATH}/app.jar
 scp -o StrictHostKeyChecking=no Dockerfile ${EC2_HOST}:${DEPLOY_PATH}/
@@ -14,5 +17,5 @@ ssh -o StrictHostKeyChecking=no ${EC2_HOST} "
 "
 
 echo "✨ Application deployed successfully!"
-echo "🌍 You can now access the application at: http://${EC2_HOST}:8080"
+echo "🌍 You can now access the application at: http://${HOST_URL}:8080"
 echo "⏳ The application will remain accessible for 1 minute."
