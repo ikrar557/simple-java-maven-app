@@ -1,4 +1,9 @@
 node {
+    environment {
+        EC2_HOST = 'ubuntu@13.211.58.33'
+        DEPLOY_PATH = '/home/ubuntu/simple-maven-java-app'
+    }
+
     stage('Checkout') {
         checkout scm
     }
@@ -22,17 +27,10 @@ node {
     }
     
     stage('Deploy') {
-        environment {
-            EC2_HOST = 'ubuntu@13.211.58.33'
-            DEPLOY_PATH = '/home/ubuntu/simple-maven-java-app'
-        }
-        
         sshagent(['ec2-ssh-key']) {
             def jarFile = sh(script: 'ls target/*.jar', returnStdout: true).trim()
             
             sh """
-                export EC2_HOST=${EC2_HOST}
-                export DEPLOY_PATH=${DEPLOY_PATH}
                 chmod +x ./jenkins/scripts/deploy.sh
                 ./jenkins/scripts/deploy.sh
             """
@@ -41,8 +39,6 @@ node {
             sleep(time: 60, unit: 'SECONDS')
             
             sh """
-                export EC2_HOST=${EC2_HOST}
-                export DEPLOY_PATH=${DEPLOY_PATH}
                 chmod +x ./jenkins/scripts/kill.sh
                 ./jenkins/scripts/kill.sh
             """
